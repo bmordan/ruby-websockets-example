@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
+        <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <section class="w-40 flex flex-column vh-100 center">
+            <section class="flex-auto bg-light-blue overflow-y-scroll">
+                <ul id="messages" class=""></ul>
+            </section>
+            <form class="bg-yellow pv3 ph2 flex">
+                <input name="msg" type="search" class="flex-auto" />
+                <button type="submit" class="flex-none">Send</button>
+            </form>
+        </section>
+        <script>
+            let color;
+            const ws = new WebSocket("ws://10.218.0.150:9200")
+
+            function addMsg(msgData) {
+                const [msg, bg] = msgData.split("|")
+                
+                $('#messages').append(`<p class="pa3 ma2 br2" style="background-color:${bg};">${msg}</p>`)
+                
+                const messages = document.getElementById("messages")
+                
+                messages.scrollIntoView({block: "end"})
+            }
+
+            ws.onmessage = function (msg) {
+                if (msg.data.substring(0, 3) === "rgb") {
+                    color = msg.data
+                } else {
+                    addMsg(msg.data)
+                }
+            }
+
+            $('form').on("submit", e => {
+                e.preventDefault()
+                const msg = $('input').val()
+                $('input').val("").focus()
+                ws.send([msg, color].join("|"))
+            })
+        </script>
+    </body>
+</html>
